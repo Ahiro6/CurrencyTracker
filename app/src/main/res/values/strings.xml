@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">RandTracker</string>
+    <string name="nav_open">navigation_view_opened</string>
+    <string name="nav_close">navigation_view_closed</string>
+</resources>
