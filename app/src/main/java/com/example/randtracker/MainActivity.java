@@ -7,6 +7,8 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,6 +23,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 
+import com.google.firebase.crashlytics.buildtools.reloc.org.apache.http.HttpRequest;
+
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
@@ -28,9 +33,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Array;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -40,8 +47,6 @@ public class MainActivity extends AppCompatActivity {
     String urlPiece1 = "https://api.apilayer.com/currency_data/convert?to=";
     String urlPiece2 = "&from=";
     String urlPiece3 = "&amount=";
-
-    double amount;
 
     EditText fromView;
     EditText toView;
@@ -53,61 +58,61 @@ public class MainActivity extends AppCompatActivity {
 
     HashMap<String, String> currencies = new HashMap<String, String>();
 
-    class JSONGetter extends AsyncTask<String, Void, String> {
-
-        StringBuilder result = new StringBuilder();
-        URL url;
-        HttpURLConnection urlConnection = null;
-
-        @Override
-        protected String doInBackground(String... urls) {
-
-            try {
-
-                url = new URL(urls[0]);
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestProperty("apikey", apiKey);
-
-                InputStream inputStream = urlConnection.getInputStream();
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String data;
-
-                while ((data = reader.readLine()) != null) {
-
-                    result.append(data);
-
-                }
-
-                return result.toString();
-
-            } catch (Exception e) {
-                Log.i("Result with error", result.toString());
-                e.printStackTrace();
-            }
-
-
-            return "Done";
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            try {
-                JSONObject jsonRes = new JSONObject(result);
-                Log.i("Res", result);
-
-                amount = Double.parseDouble(jsonRes.getString("result"));
-                Log.i("Amount", "" + amount);
-
-                amountView.setText(String.valueOf(amount));
-            }
-            catch (Exception e) {
-                e.printStackTrace();
-            }
-
-        }
-    }
+//    class JSONGetter extends AsyncTask<String, Void, String> {
+//
+//        StringBuilder result = new StringBuilder();
+//        URL url;
+//        HttpURLConnection urlConnection = null;
+//
+//        @Override
+//        protected String doInBackground(String... urls) {
+//
+//            try {
+//
+//                url = new URL(urls[0]);
+//                urlConnection = (HttpURLConnection) url.openConnection();
+//                urlConnection.setRequestProperty("apikey", apiKey);
+//
+//                InputStream inputStream = urlConnection.getInputStream();
+//                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+//
+//                String data;
+//
+//                while ((data = reader.readLine()) != null) {
+//
+//                    result.append(data);
+//
+//                }
+//
+//                return result.toString();
+//
+//            } catch (Exception e) {
+//                Log.i("Result with error", result.toString());
+//                e.printStackTrace();
+//            }
+//
+//
+//            return "Done";
+//        }
+//
+//        @Override
+//        protected void onPostExecute(String result) {
+//            super.onPostExecute(result);
+//            try {
+//                JSONObject jsonRes = new JSONObject(result);
+//                Log.i("Res", result);
+//
+//                amount = Double.parseDouble(jsonRes.getString("result"));
+//                Log.i("Amount", "" + amount);
+//
+//                amountView.setText(String.valueOf(amount));
+//            }
+//            catch (Exception e) {
+//                e.printStackTrace();
+//            }
+//
+//        }
+//    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -123,29 +128,68 @@ public class MainActivity extends AppCompatActivity {
         amountEditor = (EditText) findViewById(R.id.amountEditor);
 
         setupCurrencyHash();
+
         spinnerSetup();
 
-        convertBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+        convertBtn.setOnClickListener(view -> {
                 updateUI();
+        });
+    }
+
+    public void getAmount(String from, String to, double amount) {
+
+        Thread thread = new Thread((Runnable) () -> {
+            StringBuilder result = new StringBuilder();
+            URL url;
+            HttpURLConnection urlConnection = null;
+
+            try {
+                url = new URL(urlPiece1 + to + urlPiece2 + from + urlPiece3 + amount);
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestProperty("apikey", apiKey);
+
+                InputStream inputStream = urlConnection.getInputStream();
+                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String data;
+
+                while ((data = reader.readLine()) != null) {
+
+                    result.append(data);
+
+                }
+
+                Log.i("Res", result.toString());
+                JSONObject jsonRes = new JSONObject(result.toString());
+
+                Double resAmount = Double.parseDouble(jsonRes.getString("result"));
+                amountView.setText(String.valueOf(resAmount));
+
+            }
+            catch (Exception e) {
+                Log.i("Result with error", result.toString());
+
+                try {
+                    JSONObject jsonRes = new JSONObject(result.toString());
+                    showToast(jsonRes.getJSONObject("error").getString("info"));
+                } catch (JSONException ex) {
+                    e.printStackTrace();
+                }
+
+                e.printStackTrace();
+
             }
         });
 
-
+        thread.start();
 
     }
 
-
-    public void requestJSON(String from, String to, int amount) {
-        JSONGetter jsonGetter = new JSONGetter();
-        try {
-            jsonGetter.execute(urlPiece1 + to + urlPiece2 + from + urlPiece3 + amount);
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-        }
-
+    public void showToast(String message) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> {
+            Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+        });
     }
 
     public void setupCurrencyHash() {
@@ -171,7 +215,7 @@ public class MainActivity extends AppCompatActivity {
 
         Toast.makeText(getApplicationContext(), currencies.get(country), Toast.LENGTH_SHORT).show();
 
-        //toView.setText(currencies.get(country));
+//        toView.setText(currencies.get(country));
 
         return super.onOptionsItemSelected(item);
     }
@@ -196,7 +240,13 @@ public class MainActivity extends AppCompatActivity {
 
         String to = toView.getText().toString().trim();
         String from = fromView.getText().toString().trim();
-        int reqAmount = Integer.parseInt(amountEditor.getText().toString());
+
+        if(amountEditor.getText().toString().equals("")) {
+            Toast.makeText(getApplicationContext(), "Enter a value to be converted", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        double reqAmount = Double.parseDouble(amountEditor.getText().toString());
 
         if(to.equals("") || from.equals("")) {
             Toast.makeText(getApplicationContext(), "Enter currencies to be converted", Toast.LENGTH_SHORT).show();
@@ -208,26 +258,35 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        requestJSON(from, to, reqAmount);
+//        requestJSON(from, to, reqAmount);
 
-
+        getAmount(from, to, reqAmount);
     }
 
     public void spinnerSetup() {
 
-        ArrayList<String> countries = new ArrayList<>();
-        countries.addAll(currencies.keySet());
+        ArrayList<String> countries = new ArrayList<>(currencies.keySet());
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, countries);
 
         toSpinner.setAdapter(adapter);
         fromSpinner.setAdapter(adapter);
 
+        Log.i("Spinner", toSpinner.toString());
+        Log.i("Spinner", fromSpinner.toString());
+
         toSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String item = adapterView.getItemAtPosition(i).toString();
+                try {
+                    String item = adapterView.getItemAtPosition(i).toString();
 
-                toView.setText(currencies.get(item));
+                    toView.setText(currencies.get(item));
+
+                }
+                catch (NullPointerException e) {
+                    Log.i("Null Pointer", String.valueOf(i));
+                    e.printStackTrace();
+                }
             }
 
             @Override
@@ -235,20 +294,20 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String item = adapterView.getItemAtPosition(i).toString();
-
-                fromView.setText(currencies.get(item));
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-
-            }
-        });
+//
+//        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+//                String item = adapterView.getItemAtPosition(i).toString();
+//
+//                fromView.setText(currencies.get(item));
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> adapterView) {
+//
+//            }
+//        });
     }
 
 

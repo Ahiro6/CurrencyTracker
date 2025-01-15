@@ -9,9 +9,9 @@
 
 
     <TableLayout
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="20dp"
+        android:layout_margin="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -21,9 +21,33 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
+            <TextView
+                android:id="@+id/amountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="From"
+                android:textColor="#BAAEAE"
+                android:textSize="24sp" />
+            <Space/>
+
+            <TextView
+                android:id="@+id/amountText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="To"
+                android:textColor="#BAAEAE"
+                android:textSize="24sp" />
+
+
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
             <Spinner
                 android:id="@+id/fromSpinner"
-                android:layout_width="match_parent"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#D16262">
 
@@ -36,19 +60,19 @@
 
             <Spinner
                 android:id="@+id/toSpinner"
-                android:layout_width="match_parent"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#D16262" />
         </TableRow>
 
 
         <TableRow
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
 
             <EditText
                 android:id="@+id/fromView"
-                android:layout_width="100dp"
+                android:layout_width="125dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BAA6A6"
                 android:ems="10"
@@ -58,14 +82,14 @@
 
             <ImageButton
                 android:id="@+id/convertBtn"
-                android:layout_width="wrap_content"
+                android:layout_width="125dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#BF4444"
                 app:srcCompat="@android:drawable/ic_menu_send" />
 
             <EditText
                 android:id="@+id/toView"
-                android:layout_width="100dp"
+                android:layout_width="125dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#A69595"
                 android:ems="10"
@@ -85,7 +109,7 @@
 
             <TextView
                 android:id="@+id/amountView"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="match_parent"
                 android:text="0.00"
                 android:textAlignment="center"
@@ -101,7 +125,7 @@
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="180dp">
 
             <TextView
                 android:id="@+id/amountText"
@@ -113,7 +137,7 @@
 
             <EditText
                 android:id="@+id/amountEditor"
-                android:layout_width="wrap_content"
+                android:layout_width="100dp"
                 android:layout_height="wrap_content"
                 android:backgroundTint="#B6A2A2"
                 android:ems="10"
