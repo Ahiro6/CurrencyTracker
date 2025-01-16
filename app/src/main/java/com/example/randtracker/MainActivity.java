@@ -9,6 +9,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.Editable;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
     EditText fromView;
     EditText toView;
     ImageButton convertBtn;
+    ImageButton switchBtn;
     TextView amountView;
     Spinner fromSpinner;
     Spinner toSpinner;
@@ -122,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
         fromView = (EditText) findViewById(R.id.fromView);
         toView = (EditText) findViewById(R.id.toView);
         convertBtn = (ImageButton) findViewById(R.id.convertBtn);
+        switchBtn = (ImageButton) findViewById(R.id.switchBtn);
         amountView = (TextView) findViewById(R.id.amountView);
         fromSpinner = (Spinner) findViewById(R.id.fromSpinner);
         toSpinner = (Spinner) findViewById(R.id.toSpinner);
@@ -132,7 +135,10 @@ public class MainActivity extends AppCompatActivity {
         spinnerSetup();
 
         convertBtn.setOnClickListener(view -> {
-                updateUI();
+            updateUI();
+        });
+        switchBtn.setOnClickListener(view -> {
+            swap();
         });
     }
 
@@ -208,6 +214,11 @@ public class MainActivity extends AppCompatActivity {
         currencies.put("Kuwaiti", "KWD");
     }
 
+    public void swap() {
+        Editable from = fromView.getText();
+        fromView.setText(toView.getText());
+        toView.setText(from);
+    }
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
 
@@ -266,13 +277,18 @@ public class MainActivity extends AppCompatActivity {
     public void spinnerSetup() {
 
         ArrayList<String> countries = new ArrayList<>(currencies.keySet());
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, countries);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_spinner_item,
+                countries);
 
         toSpinner.setAdapter(adapter);
         fromSpinner.setAdapter(adapter);
 
         Log.i("Spinner", toSpinner.toString());
         Log.i("Spinner", fromSpinner.toString());
+        for(int i = 0; i < currencies.size(); i++) {
+            Log.i("Adapter", toSpinner.getAdapter().getItem(i).toString());
+        }
 
         toSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -294,20 +310,27 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-//
-//        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @Override
-//            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-//                String item = adapterView.getItemAtPosition(i).toString();
-//
-//                fromView.setText(currencies.get(item));
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> adapterView) {
-//
-//            }
-//        });
+
+        fromSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                try {
+                    String item = adapterView.getItemAtPosition(i).toString();
+
+                    fromView.setText(currencies.get(item));
+
+                }
+                catch (NullPointerException e) {
+                    Log.i("Null Pointer", String.valueOf(i));
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
     }
 
 
